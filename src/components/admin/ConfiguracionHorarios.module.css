@@ -1,0 +1,100 @@
+.container {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 2rem;
+}
+
+.header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.header p {
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+.dayRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.dayRow:last-child {
+  border-bottom: none;
+}
+
+.dayToggle {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 150px;
+}
+
+.checkbox {
+  width: 1.2rem;
+  height: 1.2rem;
+  cursor: pointer;
+}
+
+.dayName {
+  font-weight: 600;
+  color: #333;
+}
+
+.timeInputs {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.timeInputGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeInputGroup label {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 0.3rem;
+}
+
+.input {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.input:disabled {
+  background-color: #f8f9fa;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.saveBtn {
+  width: 100%;
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: #1e88e5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.saveBtn:hover {
+  background-color: #1565c0;
+}
