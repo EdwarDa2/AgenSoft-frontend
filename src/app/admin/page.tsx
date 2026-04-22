@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link"; 
 import CitasTable from "../../components/admin/CitasTable";
 import styles from "./page.module.css";
-import api from "../../api/axios";
+import { citaService } from "../../services/cita.service";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ citasHoy: 0, pendientes: 0 });
@@ -12,9 +12,9 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await api.get('/citas/stats');
-        if (response.data.success) {
-          setStats(response.data.data);
+        const data = await citaService.obtenerStats();
+        if (data.success) {
+          setStats(data.data);
         }
       } catch (error) {
         console.error("Error fetching stats:", error);

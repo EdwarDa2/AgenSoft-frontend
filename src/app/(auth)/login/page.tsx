@@ -5,7 +5,7 @@ import Link from "next/link";
 import styles from "./page.module.css";
 import { useAuth } from "../../../context/AuthContext";
 import { useRouter } from "next/navigation";
-import api from "../../../api/axios";
+import { authService } from "../../../services/auth.service";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -22,14 +22,14 @@ export default function LoginPage() {
     setLoading(true);
     
     try {
-      // Petición real al backend
-      const response = await api.post('/usuarios/login', {
+      // Petición real al backend a través del servicio
+      const data = await authService.login({
         email,
         password
       });
 
       // El backend devuelve { success, message, data: { user, token } }
-      const { user, token } = response.data.data;
+      const { user, token } = data.data;
       
       // Guardar en el contexto y localStorage
       login(user, token);

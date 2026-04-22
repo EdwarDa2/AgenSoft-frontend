@@ -3,16 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './HorarioSelector.module.css';
-import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
-
-interface Bloque {
-  id: number;
-  fecha: string;
-  hora_inicio: string;
-  hora_fin: string;
-  estado_id: number;
-}
+import { bloqueService } from '../../services/bloque.service';
+import { citaService } from '../../services/cita.service';
+import { Bloque } from '../../types';
 
 export default function HorarioSelector() {
   const router = useRouter();
@@ -29,10 +23,10 @@ export default function HorarioSelector() {
       if (!fecha) return;
       try {
         setLoading(true);
-        const response = await api.get(`/bloques/fecha/${fecha}`);
-        if (response.data.success) {
+        const data = await bloqueService.obtenerPorFecha(fecha);
+        if (data.success) {
           // Filtrar solo bloques disponibles (estado_id 1)
-          setBloques(response.data.data.filter((b: Bloque) => b.estado_id === 1));
+          setBloques(data.data.filter((b: Bloque) => b.estado_id === 1));
         }
       } catch (err) {
         console.error("Error fetching blocks:", err);
@@ -49,13 +43,13 @@ export default function HorarioSelector() {
 
     try {
       setLoading(true);
-      const response = await api.post('/citas/solicitar', {
+      const data = await citaService.solicitar({
         paciente_id: user.id,
         bloque_id: bloqueSeleccionado,
         motivo_consulta: motivo || "Consulta general"
       });
 
-      if (response.data.success) {
+      if (data.success) {
         const bloque = bloques.find(b => b.id === bloqueSeleccionado);
         router.push(`/paciente/agendar/exito?fecha=${fecha}&hora=${bloque?.hora_inicio}`);
       }

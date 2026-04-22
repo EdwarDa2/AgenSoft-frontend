@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./page.module.css";
 import { useAuth } from "../../../context/AuthContext";
-import api from "@/api/axios";
+import { pacienteService } from "../../../services/paciente.service";
 
 export default function PerfilPacientePage() {
   const { user } = useAuth();
@@ -24,9 +24,9 @@ export default function PerfilPacientePage() {
       try {
         setLoading(true);
         // Intentar obtener el perfil por el ID de usuario
-        const response = await api.get(`/pacientes/usuario/${user.id}`);
-        if (response.data.success && response.data.data) {
-          const p = response.data.data;
+        const data = await pacienteService.obtenerPorUsuario(user.id);
+        if (data.success && data.data) {
+          const p = data.data;
           setPacienteId(p.id);
           setFormData({
             nombre: p.nombre_completo || user.nombre || "",
@@ -59,21 +59,21 @@ export default function PerfilPacientePage() {
       setLoading(true);
       if (pacienteId) {
         // Actualizar perfil existente
-        await api.patch(`/pacientes/${pacienteId}`, {
+        await pacienteService.actualizar(pacienteId, {
           nombre_completo: formData.nombre,
           telefono: formData.telefono,
           informacion_medica: formData.informacionMedica
         });
       } else {
         // Crear perfil si no existe (caso de usuario viejo sin perfil)
-        const res = await api.post("/pacientes", {
+        const data = await pacienteService.crear({
           usuario_id: user.id,
           nombre_completo: formData.nombre,
           telefono: formData.telefono,
           informacion_medica: formData.informacionMedica
         });
-        if (res.data.success) {
-          setPacienteId(res.data.data.id);
+        if (data.success) {
+          setPacienteId(data.data.id);
         }
       }
       alert("¡Perfil actualizado con éxito!");

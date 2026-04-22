@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import styles from "./ConfiguracionHorarios.module.css";
-import api from "../../api/axios";
+import { horarioService } from "../../services/horario.service";
 
 const DIAS_MAP: Record<string, number> = {
   "Domingo": 0,
@@ -57,7 +57,7 @@ export default function ConfiguracionHorarios() {
       setLoading(true);
       // Guardar cada día configurado
       for (const h of horarios) {
-        await api.post('/horarios/configurar', {
+        await horarioService.configurarDia({
           dia_semana: DIAS_MAP[h.dia],
           hora_inicio: h.inicio || "00:00",
           hora_fin: h.fin || "00:00",
@@ -76,13 +76,13 @@ export default function ConfiguracionHorarios() {
   const handleGenerarBloques = async () => {
     try {
       setLoading(true);
-      const response = await api.post('/horarios/generar', {
+      const data = await horarioService.generarBloques({
         fecha_inicio: generarData.inicio,
         fecha_fin: generarData.fin,
         duracion_minutos: Number(generarData.duracion)
       });
-      if (response.data.status === 'success') {
-        alert(response.data.message);
+      if (data.status === 'success') {
+        alert(data.message);
       }
     } catch (error) {
       console.error(error);
