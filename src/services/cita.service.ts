@@ -31,6 +31,11 @@ export const citaService = {
     return response.data;
   },
 
+  obtenerHistorial: async () => {
+    const response = await api.get('/citas/historial');
+    return response.data;
+  },
+
   responder: async (id: number, aceptar: boolean) => {
     const response = await api.patch(`/citas/${id}/responder`, { aceptar });
     return response.data;
