@@ -1,7 +1,8 @@
-"use client"; // Es interactivo, así que corre del lado del cliente
+"use client";
 
 import { useState } from 'react';
 import styles from './CitasTable.module.css';
+import ModalRecorrer from './ModalRecorrer'; // <-- 1. Importamos el modal
 
 // Datos simulados (Mocks)
 const MOCK_CITAS = [
@@ -11,17 +12,39 @@ const MOCK_CITAS = [
 ];
 
 export default function CitasTable() {
-  // Usamos estado para poder modificar la vista cuando des clic a los botones
   const [citas, setCitas] = useState(MOCK_CITAS);
+  
+  // <-- 2. Estados para controlar el Modal
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [citaSeleccionada, setCitaSeleccionada] = useState<{id: number, paciente: string} | null>(null);
 
   const cambiarEstado = (id: number, nuevoEstado: string) => {
     setCitas(citas.map(cita => 
       cita.id === id ? { ...cita, estado: nuevoEstado } : cita
     ));
-    // Aquí es donde Carlos conectará su endpoint PUT /api/v1/citas/:id
+  };
+
+  // <-- 3. Función para abrir el modal con la cita correcta
+  const abrirModalRecorrer = (id: number, paciente: string) => {
+    setCitaSeleccionada({ id, paciente });
+    setModalAbierto(true);
+  };
+
+  // <-- 4. Función para aplicar el cambio cuando el modal confirma
+  const confirmarRecorrido = (nuevaFecha: string, nuevaHora: string) => {
+    if (citaSeleccionada) {
+      setCitas(citas.map(cita => 
+        cita.id === citaSeleccionada.id 
+          ? { ...cita, fecha: nuevaFecha, hora: nuevaHora, estado: 'Recorrida' } 
+          : cita
+      ));
+      setModalAbierto(false);
+      alert(`Cita recorrida exitosamente al ${nuevaFecha} a las ${nuevaHora}`);
+    }
   };
 
   const getBadgeClass = (estado: string) => {
+    // ... (Mantén tu código getBadgeClass exactamente igual)
     switch (estado) {
       case 'Pendiente': return styles.badgePendiente;
       case 'Confirmada': return styles.badgeConfirmada;
@@ -34,6 +57,7 @@ export default function CitasTable() {
   return (
     <div className={styles.tableContainer}>
       <table className={styles.table}>
+        {/* ... (Mantén tu thead exactamente igual) */}
         <thead>
           <tr>
             <th>ID</th>
@@ -47,6 +71,7 @@ export default function CitasTable() {
         <tbody>
           {citas.map((cita) => (
             <tr key={cita.id}>
+              {/* ... (Mantén las celdas de datos iguales) */}
               <td>#{cita.id}</td>
               <td>{cita.paciente}</td>
               <td>{cita.fecha}</td>
@@ -63,7 +88,7 @@ export default function CitasTable() {
                   </button>
                 )}
                 {cita.estado !== 'Cancelada' && (
-                  <button onClick={() => alert('Aquí abriremos un modal para elegir la nueva hora')} className={`${styles.btn} ${styles.btnRecorrer}`}>
+                  <button onClick={() => abrirModalRecorrer(cita.id, cita.paciente)} className={`${styles.btn} ${styles.btnRecorrer}`}>
                     Recorrer
                   </button>
                 )}
@@ -77,6 +102,14 @@ export default function CitasTable() {
           ))}
         </tbody>
       </table>
+
+      {/* <-- 6. Renderizamos el Modal al final */}
+      <ModalRecorrer 
+        isOpen={modalAbierto}
+        onClose={() => setModalAbierto(false)}
+        onConfirm={confirmarRecorrido}
+        pacienteNombre={citaSeleccionada?.paciente || ""}
+      />
     </div>
   );
 }
