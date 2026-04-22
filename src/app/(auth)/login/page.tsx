@@ -19,8 +19,8 @@ import { useRouter } from "next/navigation"; // Para redireccionar
       // Simulamos que el backend nos respondió "Todo OK, es el paciente Cesar"
       login("Cesar", "paciente"); 
       
-      // Lo mandamos al calendario directamente
-      router.push("/paciente/agendar"); 
+      // Lo mandamos al dashboard
+      router.push("/paciente"); 
     };
   return (
     <div className={styles.authContainer}>
