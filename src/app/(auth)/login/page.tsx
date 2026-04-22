@@ -3,30 +3,60 @@
 import { useState } from "react";
 import Link from "next/link";
 import styles from "./page.module.css";
-import { useAuth } from "../../../context/AuthContext"; // Importar el hook
-import { useRouter } from "next/navigation"; // Para redireccionar
+import { useAuth } from "../../../context/AuthContext";
+import { useRouter } from "next/navigation";
+import api from "../../../api/axios";
 
-  export default function LoginPage() {
-    const [correo, setCorreo] = useState("");
-    const [password, setPassword] = useState("");
+export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  
+  const { login } = useAuth();
+  const router = useRouter();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
     
-    const { login } = useAuth(); // Traer la función login
-    const router = useRouter();  // Traer el router
+    try {
+      // Petición real al backend
+      const response = await api.post('/usuarios/login', {
+        email,
+        password
+      });
 
-    const handleLogin = (e: React.FormEvent) => {
-      e.preventDefault();
+      const { user, token } = response.data;
       
-      // Simulamos que el backend nos respondió "Todo OK, es el paciente Cesar"
-      login("Cesar", "paciente"); 
+      // Guardar en el contexto y localStorage
+      login(user, token);
       
-      // Lo mandamos al dashboard
-      router.push("/paciente"); 
-    };
+      // Redirigir según el rol
+      if (user.rol === 'admin') {
+        router.push("/admin");
+      } else {
+        router.push("/paciente");
+      }
+    } catch (err: any) {
+      console.error("Error en login:", err);
+      setError(
+        err.response?.data?.message || 
+        "Error al conectar con el servidor. Verifica tus credenciales."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className={styles.authContainer}>
       <div className={styles.authCard}>
         <h1 className={styles.title}>Iniciar Sesión</h1>
         <p className={styles.subtitle}>Ingresa a tu portal de AgenSoft</p>
+
+        {error && <div className={styles.errorMessage}>{error}</div>}
 
         <form onSubmit={handleLogin}>
           <div className={styles.formGroup}>
@@ -35,9 +65,10 @@ import { useRouter } from "next/navigation"; // Para redireccionar
               type="email" 
               className={styles.input} 
               placeholder="juan@ejemplo.com"
-              value={correo}
-              onChange={(e) => setCorreo(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required 
+              disabled={loading}
             />
           </div>
 
@@ -50,11 +81,16 @@ import { useRouter } from "next/navigation"; // Para redireccionar
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required 
+              disabled={loading}
             />
           </div>
 
-          <button type="submit" className={styles.submitBtn}>
-            Ingresar
+          <button 
+            type="submit" 
+            className={styles.submitBtn}
+            disabled={loading}
+          >
+            {loading ? "Cargando..." : "Ingresar"}
           </button>
         </form>
 

@@ -1,45 +1,57 @@
-"use client"; // Es manejo de estado, debe ser del lado del cliente
+"use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
-// 1. Definimos cómo se ve un "Usuario" en nuestro frontend
 interface User {
+  id: number;
   nombre: string;
+  email: string;
   rol: "paciente" | "admin";
 }
 
-// 2. Definimos qué funciones tendrá nuestro cerebro (Contexto)
 interface AuthContextType {
-  user: User | null; // null significa que no ha iniciado sesión
-  login: (nombre: string, rol: "paciente" | "admin") => void;
+  user: User | null;
+  login: (userData: User, token: string) => void;
   logout: () => void;
+  isLoading: boolean;
 }
 
-// 3. Creamos el Contexto vacío
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// 4. Creamos el "Proveedor" (El que va a envolver a toda la aplicación para darle esta memoria)
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Por defecto, nadie ha iniciado sesión (null)
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const login = (nombre: string, rol: "paciente" | "admin") => {
-    setUser({ nombre, rol });
+  // Intentar recuperar la sesión al cargar
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
+    
+    if (savedUser && token) {
+      setUser(JSON.parse(savedUser));
+    }
+    setIsLoading(false);
+  }, []);
+
+  const login = (userData: User, token: string) => {
+    setUser(userData);
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(userData));
   };
 
   const logout = () => {
     setUser(null);
-    // En el futuro, aquí borraremos el Token del localStorage
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-// 5. Creamos un Hook personalizado para usar esto fácilmente en cualquier pantalla
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
