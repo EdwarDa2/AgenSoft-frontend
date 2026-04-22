@@ -1,36 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./ListaCitasPaciente.module.css";
+import { useAuth } from "../../context/AuthContext";
+import api from "../../api/axios";
 
-// Mocks extendidos para probar filtros
-const MIS_CITAS_MOCK = [
-  { id: 1, fecha: "2026-04-25", hora: "09:00 AM", doctor: "Dr. Simi", estado: "Confirmada" },
-  { id: 2, fecha: "2026-05-01", hora: "11:30 AM", doctor: "Dra. García", estado: "Pendiente" },
-  { id: 3, fecha: "2026-03-15", hora: "10:00 AM", doctor: "Dr. Simi", estado: "Completada" },
-  { id: 4, fecha: "2026-02-10", hora: "04:00 PM", doctor: "Dra. García", estado: "Cancelada" },
-];
+interface Cita {
+  id_cita: number;
+  fecha: string;
+  hora_inicio: string;
+  estado: string;
+}
 
 export default function ListaCitasPaciente() {
+  const { user } = useAuth();
+  const [citas, setCitas] = useState<Cita[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todos");
   const [busqueda, setBusqueda] = useState("");
 
-  const citasFiltradas = MIS_CITAS_MOCK.filter(cita => {
+  useEffect(() => {
+    const fetchCitas = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setLoading(true);
+        const response = await api.get(`/citas/paciente/${user.id}`);
+        if (response.data.success) {
+          setCitas(response.data.data);
+        }
+      } catch (err: any) {
+        setError("Error al cargar tus citas");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCitas();
+  }, [user?.id]);
+
+  const citasFiltradas = citas.filter(cita => {
     const coincideEstado = filtroEstado === "todos" || cita.estado.toLowerCase() === filtroEstado.toLowerCase();
-    const coincideBusqueda = cita.doctor.toLowerCase().includes(busqueda.toLowerCase()) || 
-                            cita.id.toString().includes(busqueda);
+    const coincideBusqueda = cita.id_cita.toString().includes(busqueda);
     return coincideEstado && coincideBusqueda;
   });
+
+  if (loading) return <p className={styles.loading}>Cargando tus citas...</p>;
+  if (error) return <p className={styles.error}>{error}</p>;
 
   return (
     <div className={styles.container}>
       {/* Filtros */}
       <div className={styles.filters}>
         <div className={styles.filterGroup}>
-          <label>Buscar por Doctor o ID</label>
+          <label>Buscar por ID</label>
           <input 
             type="text" 
-            placeholder="Ej: Simi..." 
+            placeholder="Ej: 1..." 
             className={styles.searchInput}
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
@@ -47,7 +75,6 @@ export default function ListaCitasPaciente() {
             <option value="todos">Todos los estados</option>
             <option value="pendiente">Pendiente</option>
             <option value="confirmada">Confirmada</option>
-            <option value="completada">Completada</option>
             <option value="cancelada">Cancelada</option>
           </select>
         </div>
@@ -61,14 +88,13 @@ export default function ListaCitasPaciente() {
             const estadoClass = styles[estadoLower] || '';
 
             return (
-              <div key={cita.id} className={styles.citaCard}>
+              <div key={cita.id_cita} className={styles.citaCard}>
                 <div className={`${styles.estadoIndicator} ${estadoClass}`} />
                 
                 <div className={styles.info}>
-                  <h3>Cita #{cita.id}</h3>
+                  <h3>Cita #{cita.id_cita}</h3>
                   <p>📅 <strong>Fecha:</strong> {cita.fecha}</p>
-                  <p>⏰ <strong>Hora:</strong> {cita.hora}</p>
-                  <p>🩺 <strong>Especialista:</strong> {cita.doctor}</p>
+                  <p>⏰ <strong>Hora:</strong> {cita.hora_inicio}</p>
                   
                   <span className={`${styles.statusBadge} ${estadoClass}`}>
                     {cita.estado}
@@ -79,7 +105,7 @@ export default function ListaCitasPaciente() {
           })
         ) : (
           <div className={styles.noData}>
-            <p>No se encontraron citas con los filtros seleccionados. 🔍</p>
+            <p>No se encontraron citas. 🔍</p>
           </div>
         )}
       </div>

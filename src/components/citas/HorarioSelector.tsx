@@ -1,22 +1,69 @@
 "use client"; 
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './HorarioSelector.module.css';
+import api from '../../api/axios';
+import { useAuth } from '../../context/AuthContext';
 
-const HORARIOS_DISPONIBLES = [
-  "09:00 AM", "09:30 AM", "10:00 AM", "11:00 AM",
-  "12:30 PM", "02:00 PM", "03:30 PM", "04:00 PM"
-];
+interface Bloque {
+  id: number;
+  fecha: string;
+  hora_inicio: string;
+  hora_fin: string;
+  estado_id: number;
+}
 
 export default function HorarioSelector() {
   const router = useRouter();
+  const { user } = useAuth();
   const [fecha, setFecha] = useState('');
-  const [horaSeleccionada, setHoraSeleccionada] = useState<string | null>(null);
+  const [bloques, setBloques] = useState<Bloque[]>([]);
+  const [bloqueSeleccionado, setBloqueSeleccionado] = useState<number | null>(null);
+  const [motivo, setMotivo] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleConfirmar = () => {
-    // Redirigir a la página de éxito con los datos en la URL
-    router.push(`/paciente/agendar/exito?fecha=${fecha}&hora=${horaSeleccionada}`);
+  useEffect(() => {
+    const fetchBloques = async () => {
+      if (!fecha) return;
+      try {
+        setLoading(true);
+        const response = await api.get(`/bloques/fecha/${fecha}`);
+        if (response.data.success) {
+          // Filtrar solo bloques disponibles (estado_id 1)
+          setBloques(response.data.data.filter((b: Bloque) => b.estado_id === 1));
+        }
+      } catch (err) {
+        console.error("Error fetching blocks:", err);
+        setError("No se pudieron cargar los horarios para esta fecha.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBloques();
+  }, [fecha]);
+
+  const handleConfirmar = async () => {
+    if (!bloqueSeleccionado || !user?.id) return;
+
+    try {
+      setLoading(true);
+      const response = await api.post('/citas/solicitar', {
+        paciente_id: user.id,
+        bloque_id: bloqueSeleccionado,
+        motivo_consulta: motivo || "Consulta general"
+      });
+
+      if (response.data.success) {
+        const bloque = bloques.find(b => b.id === bloqueSeleccionado);
+        router.push(`/paciente/agendar/exito?fecha=${fecha}&hora=${bloque?.hora_inicio}`);
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Error al agendar la cita");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -30,30 +77,54 @@ export default function HorarioSelector() {
         type="date" 
         className={styles.dateInput}
         value={fecha}
-        onChange={(e) => setFecha(e.target.value)}
-        min={new Date().toISOString().split('T')[0]} // No permite fechas pasadas
+        onChange={(e) => {
+          setFecha(e.target.value);
+          setBloqueSeleccionado(null);
+        }}
+        min={new Date().toISOString().split('T')[0]}
       />
 
-      {fecha && (
+      {loading && <p>Cargando horarios...</p>}
+      {error && <p className={styles.error}>{error}</p>}
+
+      {!loading && fecha && (
         <>
           <div className={styles.grid}>
-            {HORARIOS_DISPONIBLES.map((hora) => (
-              <button
-                key={hora}
-                className={`${styles.timeSlot} ${horaSeleccionada === hora ? styles.selected : ''}`}
-                onClick={() => setHoraSeleccionada(hora)}
-              >
-                {hora}
-              </button>
-            ))}
+            {bloques.length > 0 ? (
+              bloques.map((bloque) => (
+                <button
+                  key={bloque.id}
+                  className={`${styles.timeSlot} ${bloqueSeleccionado === bloque.id ? styles.selected : ''}`}
+                  onClick={() => setBloqueSeleccionado(bloque.id)}
+                >
+                  {bloque.hora_inicio}
+                </button>
+              ))
+            ) : (
+              <p className={styles.noData}>No hay horarios disponibles para esta fecha.</p>
+            )}
           </div>
+
+          {bloqueSeleccionado && (
+            <div className={styles.motivoSection} style={{ marginTop: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                Motivo de la consulta:
+              </label>
+              <textarea 
+                style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
+                value={motivo}
+                onChange={(e) => setMotivo(e.target.value)}
+                placeholder="Ej: Dolor de cabeza, revisión anual..."
+              />
+            </div>
+          )}
 
           <button 
             className={styles.confirmBtn}
-            disabled={!horaSeleccionada}
+            disabled={!bloqueSeleccionado || loading}
             onClick={handleConfirmar}
           >
-            Confirmar Cita
+            {loading ? "Procesando..." : "Confirmar Cita"}
           </button>
         </>
       )}
