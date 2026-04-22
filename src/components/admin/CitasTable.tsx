@@ -1,45 +1,70 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './CitasTable.module.css';
-import ModalRecorrer from './ModalRecorrer'; // <-- 1. Importamos el modal
+import ModalRecorrer from './ModalRecorrer';
+import api from '../../api/axios';
 
-// Datos simulados (Mocks)
-const MOCK_CITAS = [
-  { id: 1, paciente: "Juan Pérez", fecha: "2026-04-25", hora: "09:00 AM", estado: "Pendiente" },
-  { id: 2, paciente: "María López", fecha: "2026-04-25", hora: "10:00 AM", estado: "Confirmada" },
-  { id: 3, paciente: "Carlos Ruiz", fecha: "2026-04-26", hora: "11:00 AM", estado: "Pendiente" },
-];
+interface Cita {
+  id_cita: number;
+  paciente: string;
+  fecha: string;
+  hora_inicio: string;
+  estado: string;
+}
 
 export default function CitasTable() {
-  const [citas, setCitas] = useState(MOCK_CITAS);
+  const [citas, setCitas] = useState<Cita[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   
-  // <-- 2. Estados para controlar el Modal
   const [modalAbierto, setModalAbierto] = useState(false);
   const [citaSeleccionada, setCitaSeleccionada] = useState<{id: number, paciente: string} | null>(null);
 
-  const cambiarEstado = (id: number, nuevoEstado: string) => {
-    setCitas(citas.map(cita => 
-      cita.id === id ? { ...cita, estado: nuevoEstado } : cita
-    ));
+  const fetchCitas = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/citas/pendientes');
+      if (response.data.success) {
+        setCitas(response.data.data);
+      }
+    } catch (err: any) {
+      setError("Error al cargar las citas pendientes");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // <-- 3. Función para abrir el modal con la cita correcta
+  useEffect(() => {
+    fetchCitas();
+  }, []);
+
+  const cambiarEstado = async (id: number, aceptar: boolean) => {
+    try {
+      const response = await api.patch(`/citas/${id}/responder`, { aceptar });
+      if (response.data.success) {
+        // Recargar la lista después de responder
+        fetchCitas();
+        alert(aceptar ? "Cita confirmada" : "Cita rechazada");
+      }
+    } catch (err: any) {
+      alert("Error al procesar la cita");
+      console.error(err);
+    }
+  };
+
   const abrirModalRecorrer = (id: number, paciente: string) => {
     setCitaSeleccionada({ id, paciente });
     setModalAbierto(true);
   };
 
-  // <-- 4. Función para aplicar el cambio cuando el modal confirma
   const confirmarRecorrido = (nuevaFecha: string, nuevaHora: string) => {
     if (citaSeleccionada) {
-      setCitas(citas.map(cita => 
-        cita.id === citaSeleccionada.id 
-          ? { ...cita, fecha: nuevaFecha, hora: nuevaHora, estado: 'Recorrida' } 
-          : cita
-      ));
-      setModalAbierto(false);
+      // Por ahora simulado, ya que el backend no tiene 'recorrer' implementado completamente
       alert(`Cita recorrida exitosamente al ${nuevaFecha} a las ${nuevaHora}`);
+      setModalAbierto(false);
+      fetchCitas();
     }
   };
 
@@ -47,11 +72,15 @@ export default function CitasTable() {
     switch (estado) {
       case 'Pendiente': return styles.badgePendiente;
       case 'Confirmada': return styles.badgeConfirmada;
+      case 'Rechazada': return styles.badgeCancelada;
       case 'Cancelada': return styles.badgeCancelada;
       case 'Recorrida': return styles.badgeRecorrida;
       default: return '';
     }
   };
+
+  if (loading) return <p>Cargando citas...</p>;
+  if (error) return <p className={styles.error}>{error}</p>;
 
   return (
     <div className={styles.tableContainer}>
@@ -67,46 +96,53 @@ export default function CitasTable() {
           </tr>
         </thead>
         <tbody>
-          {citas.map((cita) => (
-            <tr key={cita.id}>
-              <td>#{cita.id}</td>
-              <td>{cita.paciente}</td>
-              <td>{cita.fecha}</td>
-              <td>{cita.hora}</td>
-              <td>
-                <span className={`${styles.badge} ${getBadgeClass(cita.estado)}`}>
-                  {cita.estado}
-                </span>
-              </td>
-              <td className={styles.actions}>
-                {cita.estado === 'Pendiente' && (
-                  <button onClick={() => cambiarEstado(cita.id, 'Confirmada')} className={`${styles.btn} ${styles.btnConfirmar}`}>
-                    Confirmar
-                  </button>
-                )}
-                {cita.estado !== 'Cancelada' && (
-                  <button onClick={() => abrirModalRecorrer(cita.id, cita.paciente)} className={`${styles.btn} ${styles.btnRecorrer}`}>
-                    Recorrer
-                  </button>
-                )}
-                {cita.estado !== 'Cancelada' && (
-                  <button onClick={() => cambiarEstado(cita.id, 'Cancelada')} className={`${styles.btn} ${styles.btnCancelar}`}>
-                    Cancelar
-                  </button>
-                )}
+          {citas.length === 0 ? (
+            <tr>
+              <td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>
+                No hay citas pendientes por revisar.
               </td>
             </tr>
-          ))}
+          ) : (
+            citas.map((cita) => (
+              <tr key={cita.id_cita}>
+                <td>#{cita.id_cita}</td>
+                <td>{cita.paciente}</td>
+                <td>{cita.fecha}</td>
+                <td>{cita.hora_inicio}</td>
+                <td>
+                  <span className={`${styles.badge} ${getBadgeClass(cita.estado)}`}>
+                    {cita.estado}
+                  </span>
+                </td>
+                <td className={styles.actions}>
+                  {cita.estado === 'Pendiente' && (
+                    <>
+                      <button onClick={() => cambiarEstado(cita.id_cita, true)} className={`${styles.btn} ${styles.btnConfirmar}`}>
+                        Confirmar
+                      </button>
+                      <button onClick={() => cambiarEstado(cita.id_cita, false)} className={`${styles.btn} ${styles.btnCancelar}`}>
+                        Rechazar
+                      </button>
+                    </>
+                  )}
+                  {cita.estado !== 'Cancelada' && cita.estado !== 'Rechazada' && (
+                    <button onClick={() => abrirModalRecorrer(cita.id_cita, cita.paciente)} className={`${styles.btn} ${styles.btnRecorrer}`}>
+                      Recorrer
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
 
-      {/* <-- 6. Renderizamos el Modal al final */}
-      <ModalRecorrer 
-        isOpen={modalAbierto}
-        onClose={() => setModalAbierto(false)}
-        onConfirm={confirmarRecorrido}
-        pacienteNombre={citaSeleccionada?.paciente || ""}
-      />
+      {modalAbierto && citaSeleccionada && (
+        <ModalRecorrer 
+          paciente={citaSeleccionada.paciente}
+          onClose={() => setModalAbierto(false)}
+          onConfirm={confirmarRecorrido}
+        />
+      )}
     </div>
   );
-}

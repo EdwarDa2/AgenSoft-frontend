@@ -2,20 +2,37 @@
 
 import { useState } from "react";
 import styles from "./ConfiguracionHorarios.module.css";
+import api from "../../api/axios";
 
-// Simulamos los horarios actuales del doctor
+const DIAS_MAP: Record<string, number> = {
+  "Domingo": 0,
+  "Lunes": 1,
+  "Martes": 2,
+  "Miércoles": 3,
+  "Jueves": 4,
+  "Viernes": 5,
+  "Sábado": 6
+};
+
 const HORARIOS_INICIALES = [
   { dia: "Lunes", activo: true, inicio: "09:00", fin: "17:00" },
   { dia: "Martes", activo: true, inicio: "09:00", fin: "17:00" },
   { dia: "Miércoles", activo: true, inicio: "09:00", fin: "17:00" },
   { dia: "Jueves", activo: true, inicio: "09:00", fin: "17:00" },
-  { dia: "Viernes", activo: true, inicio: "09:00", fin: "14:00" }, // Sale temprano
+  { dia: "Viernes", activo: true, inicio: "09:00", fin: "14:00" },
   { dia: "Sábado", activo: false, inicio: "", fin: "" },
   { dia: "Domingo", activo: false, inicio: "", fin: "" },
 ];
 
 export default function ConfiguracionHorarios() {
   const [horarios, setHorarios] = useState(HORARIOS_INICIALES);
+  const [loading, setLoading] = useState(false);
+  const [showGenerar, setShowGenerar] = useState(false);
+  const [generarData, setGenerarData] = useState({
+    inicio: new Date().toISOString().split('T')[0],
+    fin: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    duracion: 30
+  });
 
   const toggleDia = (index: number) => {
     const nuevosHorarios = [...horarios];
@@ -36,9 +53,45 @@ export default function ConfiguracionHorarios() {
     setHorarios(nuevosHorarios);
   };
 
-  const handleGuardar = () => {
-    console.log("Enviando configuración al Backend:", horarios);
-    alert("¡Horarios guardados exitosamente!\nEstos serán los bloques que verán los pacientes.");
+  const handleGuardar = async () => {
+    try {
+      setLoading(true);
+      // Guardar cada día configurado
+      for (const h of horarios) {
+        await api.post('/horarios/configurar', {
+          dia_semana: DIAS_MAP[h.dia],
+          hora_inicio: h.inicio || "00:00",
+          hora_fin: h.fin || "00:00",
+          es_laboral: h.activo
+        });
+      }
+      alert("¡Horarios base guardados exitosamente!");
+      setShowGenerar(true);
+    } catch (error) {
+      console.error(error);
+      alert("Error al guardar la configuración");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerarBloques = async () => {
+    try {
+      setLoading(true);
+      const response = await api.post('/horarios/generar', {
+        fecha_inicio: generarData.inicio,
+        fecha_fin: generarData.fin,
+        duracion_minutos: Number(generarData.duracion)
+      });
+      if (response.data.status === 'success') {
+        alert(response.data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error al generar bloques de tiempo");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -88,9 +141,33 @@ export default function ConfiguracionHorarios() {
         ))}
       </div>
 
-      <button onClick={handleGuardar} className={styles.saveBtn}>
-        Guardar Configuración
+      <button onClick={handleGuardar} className={styles.saveBtn} disabled={loading}>
+        {loading ? "Guardando..." : "Guardar Configuración"}
       </button>
+
+      {showGenerar && (
+        <div className={styles.generarSection} style={{ marginTop: '2rem', padding: '1.5rem', border: '2px solid #e3f2fd', borderRadius: '12px', background: '#f8fbff' }}>
+          <h3>Generar Bloques de Tiempo ⚡</h3>
+          <p>Crea automáticamente los espacios disponibles basados en tu configuración.</p>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+            <div className={styles.timeInputGroup}>
+              <label>Desde</label>
+              <input type="date" value={generarData.inicio} onChange={e => setGenerarData({...generarData, inicio: e.target.value})} className={styles.input} />
+            </div>
+            <div className={styles.timeInputGroup}>
+              <label>Hasta</label>
+              <input type="date" value={generarData.fin} onChange={e => setGenerarData({...generarData, fin: e.target.value})} className={styles.input} />
+            </div>
+            <div className={styles.timeInputGroup}>
+              <label>Duración (min)</label>
+              <input type="number" value={generarData.duracion} onChange={e => setGenerarData({...generarData, duracion: Number(e.target.value)})} className={styles.input} />
+            </div>
+          </div>
+          <button onClick={handleGenerarBloques} className={styles.saveBtn} style={{ marginTop: '1rem', backgroundColor: '#1e88e5' }} disabled={loading}>
+            {loading ? "Generando..." : "Generar Espacios en la Agenda"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
