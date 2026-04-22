@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import api from "@/api/axios";
+import { authService } from "../../../services/auth.service";
 import styles from "./page.module.css";
 
 export default function RegistroPage() {
@@ -22,14 +22,14 @@ export default function RegistroPage() {
     setError("");
 
     try {
-      const response = await api.post("/usuarios/registrar", {
+      const data = await authService.registro({
         nombre,
         email: correo,
         password,
         rol_id: rolId
       });
 
-      if (response.data.success) {
+      if (data.success) {
         alert("¡Registro exitoso! Ahora puedes iniciar sesión.");
         router.push("/login");
       }

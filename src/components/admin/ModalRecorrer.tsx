@@ -2,13 +2,8 @@
 
 import { useState, useEffect } from "react";
 import styles from "./ModalRecorrer.module.css";
-import api from "../../api/axios";
-
-interface Bloque {
-  id: number;
-  hora_inicio: string;
-  hora_fin: string;
-}
+import { bloqueService } from "../../services/bloque.service";
+import { Bloque } from "../../types";
 
 interface ModalProps {
   onClose: () => void;
@@ -27,9 +22,9 @@ export default function ModalRecorrer({ onClose, onConfirm, paciente }: ModalPro
       const fetchBloques = async () => {
         try {
           setLoading(true);
-          const response = await api.get(`/bloques/fecha/${fecha}`);
-          if (response.data.success) {
-            setBloques(response.data.data);
+          const data = await bloqueService.obtenerPorFecha(fecha);
+          if (data.success) {
+            setBloques(data.data);
           }
         } catch (error) {
           console.error("Error fetching blocks:", error);

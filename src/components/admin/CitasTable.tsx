@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import styles from './CitasTable.module.css';
 import ModalRecorrer from './ModalRecorrer';
-import api from '../../api/axios';
+import { citaService } from '../../services/cita.service';
 
 interface Cita {
   id_cita: number;
@@ -24,9 +24,9 @@ export default function CitasTable() {
   const fetchCitas = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/citas/pendientes');
-      if (response.data.success) {
-        setCitas(response.data.data);
+      const data = await citaService.obtenerPendientes();
+      if (data.success) {
+        setCitas(data.data);
       }
     } catch (err: any) {
       setError("Error al cargar las citas pendientes");
@@ -42,8 +42,8 @@ export default function CitasTable() {
 
   const cambiarEstado = async (id: number, aceptar: boolean) => {
     try {
-      const response = await api.patch(`/citas/${id}/responder`, { aceptar });
-      if (response.data.success) {
+      const data = await citaService.responder(id, aceptar);
+      if (data.success) {
         // Recargar la lista después de responder
         fetchCitas();
         alert(aceptar ? "Cita confirmada" : "Cita rechazada");
@@ -63,11 +63,9 @@ export default function CitasTable() {
     if (citaSeleccionada) {
       try {
         setLoading(true);
-        const response = await api.patch(`/citas/${citaSeleccionada.id}/reprogramar`, {
-          nuevo_bloque_id: bloqueId
-        });
+        const data = await citaService.reprogramar(citaSeleccionada.id, bloqueId);
         
-        if (response.data.success) {
+        if (data.success) {
           alert(`Cita de ${citaSeleccionada.paciente} recorrida exitosamente al ${nuevaFecha} a las ${nuevaHora}`);
           setModalAbierto(false);
           fetchCitas();

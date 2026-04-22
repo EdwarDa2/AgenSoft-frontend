@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import styles from "./ListaCitasPaciente.module.css";
 import { useAuth } from "../../context/AuthContext";
-import api from "../../api/axios";
+import { citaService } from "../../services/cita.service";
 
 interface Cita {
   id_cita: number;
@@ -25,9 +25,9 @@ export default function ListaCitasPaciente() {
     
     try {
       setLoading(true);
-      const response = await api.get(`/citas/paciente/${user.id}`);
-      if (response.data.success) {
-        setCitas(response.data.data);
+      const data = await citaService.obtenerPorPaciente(user.id);
+      if (data.success) {
+        setCitas(data.data);
       }
     } catch (err: any) {
       setError("Error al cargar tus citas");
@@ -48,11 +48,9 @@ export default function ListaCitasPaciente() {
 
     try {
       setLoading(true);
-      const response = await api.patch(`/citas/${id_cita}/cancelar`, {
-        paciente_id: user.id // Enviamos el usuario_id como paciente_id para validación en el back
-      });
+      const data = await citaService.cancelar(id_cita, user.id);
       
-      if (response.data.success) {
+      if (data.success) {
         alert("Cita cancelada con éxito");
         fetchCitas();
       }
