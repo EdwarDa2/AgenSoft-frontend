@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "../components/layout/Navbar";
 import { AuthProvider } from "../context/AuthContext"; 
+import { Toaster } from 'react-hot-toast'; 
 
 export const metadata: Metadata = {
   title: "AgenSoft | Citas Médicas",
@@ -17,6 +18,7 @@ export default function RootLayout({
     <html lang="es">
       <body>
         <AuthProvider>
+          <Toaster position="top-right" reverseOrder={false} />
           <Navbar />
           <main style={{ padding: '2rem', minHeight: '80vh' }}>
             {children}

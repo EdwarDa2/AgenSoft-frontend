@@ -6,6 +6,7 @@ import styles from "./page.module.css";
 import { useAuth } from "../../../context/AuthContext";
 import { useRouter } from "next/navigation";
 import { authService } from "../../../services/auth.service";
+import { toast } from 'react-hot-toast';
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -34,6 +35,8 @@ export default function LoginPage() {
       // Guardar en el contexto y localStorage
       login(user, token);
       
+      toast.success(`¡Bienvenido de nuevo, ${user.nombre}!`);
+      
       // Redirigir según el rol
       if (user.rol.toLowerCase() === 'admin') {
         router.push("/admin");
@@ -42,10 +45,10 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       console.error("Error en login:", err);
-      setError(
-        err.response?.data?.message || 
-        "Error al conectar con el servidor. Verifica tus credenciales."
-      );
+      const msg = err.response?.data?.message || 
+        "Error al conectar con el servidor. Verifica tus credenciales.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
