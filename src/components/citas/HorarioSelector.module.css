@@ -1,0 +1,81 @@
+.container {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.dateInput {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  font-family: inherit;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 1rem;
+}
+
+.timeSlot {
+  background: #f8f9fa;
+  border: 1px solid #eaeaea;
+  padding: 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  font-weight: 500;
+  color: #333;
+}
+
+.timeSlot:hover {
+  background: #e3f2fd;
+  border-color: #1e88e5;
+  color: #1e88e5;
+}
+
+.selected {
+  background: #1e88e5;
+  color: white;
+  border-color: #1e88e5;
+}
+
+.selected:hover {
+  background: #1565c0;
+  color: white;
+}
+
+.confirmBtn {
+  width: 100%;
+  margin-top: 2rem;
+  padding: 1rem;
+  background: #1e88e5; /* Verde para confirmar */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.confirmBtn:hover {
+  background: #125188;
+}
+
+.confirmBtn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
