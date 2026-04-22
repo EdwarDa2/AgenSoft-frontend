@@ -8,6 +8,7 @@ import { citaService } from "../../services/cita.service";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ citasHoy: 0, pendientes: 0 });
+  const [vista, setVista] = useState<'pendientes' | 'historial'>('pendientes');
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -43,7 +44,23 @@ export default function AdminDashboard() {
       </div>
 
       <p>Gestiona los horarios, confirma citas o recórrelas según la disponibilidad.</p>
-      <CitasTable />
+      
+      <div className={styles.tabs}>
+        <button 
+          className={`${styles.tab} ${vista === 'pendientes' ? styles.tabActive : ''}`}
+          onClick={() => setVista('pendientes')}
+        >
+          Pendientes ({stats.pendientes})
+        </button>
+        <button 
+          className={`${styles.tab} ${vista === 'historial' ? styles.tabActive : ''}`}
+          onClick={() => setVista('historial')}
+        >
+          Historial (Aceptadas/Rechazadas)
+        </button>
+      </div>
+
+      <CitasTable tipo={vista} />
     </div>
   );
 }

@@ -13,7 +13,11 @@ interface Cita {
   estado: string;
 }
 
-export default function CitasTable() {
+interface Props {
+  tipo: 'pendientes' | 'historial';
+}
+
+export default function CitasTable({ tipo }: Props) {
   const [citas, setCitas] = useState<Cita[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -24,12 +28,15 @@ export default function CitasTable() {
   const fetchCitas = async () => {
     try {
       setLoading(true);
-      const data = await citaService.obtenerPendientes();
+      const data = tipo === 'pendientes' 
+        ? await citaService.obtenerPendientes() 
+        : await citaService.obtenerHistorial();
+        
       if (data.success) {
         setCitas(data.data);
       }
     } catch (err: any) {
-      setError("Error al cargar las citas pendientes");
+      setError(`Error al cargar las citas ${tipo}`);
       console.error(err);
     } finally {
       setLoading(false);
@@ -38,7 +45,7 @@ export default function CitasTable() {
 
   useEffect(() => {
     fetchCitas();
-  }, []);
+  }, [tipo]);
 
   const cambiarEstado = async (id: number, aceptar: boolean) => {
     try {
@@ -109,7 +116,9 @@ export default function CitasTable() {
           {citas.length === 0 ? (
             <tr>
               <td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>
-                No hay citas pendientes por revisar.
+                {tipo === 'pendientes' 
+                  ? "No hay citas pendientes por revisar." 
+                  : "No hay historial de citas para mostrar."}
               </td>
             </tr>
           ) : (
