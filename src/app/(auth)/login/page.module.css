@@ -65,8 +65,20 @@
   transition: background-color 0.2s;
 }
 
-.submitBtn:hover {
-  background-color: #1565c0;
+.submitBtn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.errorMessage {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 0.8rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  border: 1px solid #f5c6cb;
+  text-align: center;
 }
 
 .toggleAuth {
