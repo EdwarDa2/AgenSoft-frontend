@@ -1,8 +1,52 @@
 .container {
+  margin-top: 1rem;
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  align-items: center;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.filterGroup label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.select, .searchInput {
+  padding: 0.6rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  min-width: 150px;
+}
+
+.grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
-  margin-top: 1rem;
+}
+
+.noData {
+  text-align: center;
+  padding: 3rem;
+  background: #fff;
+  border-radius: 12px;
+  border: 2px dashed #eee;
+  color: #999;
+  grid-column: 1 / -1;
 }
 
 .citaCard {
@@ -68,6 +112,11 @@
   color: #155724 !important; 
 }
 
+.completada {
+  background-color: #e2e3e5 !important;
+  color: #383d41 !important;
+}
+
 .recorrida { 
   background-color: #cce5ff !important; 
   color: #004085 !important; 
@@ -81,5 +130,6 @@
 /* Colores para el indicador lateral */
 div.pendiente { background-color: #ffc107 !important; }
 div.confirmada { background-color: #28a745 !important; }
+div.completada { background-color: #6c757d !important; }
 div.recorrida { background-color: #007bff !important; }
 div.cancelada { background-color: #dc3545 !important; }
