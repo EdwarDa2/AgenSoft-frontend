@@ -1,30 +1,61 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./ModalRecorrer.module.css";
+import api from "../../api/axios";
 
-// Definimos qué "props" (parámetros) necesita este componente para funcionar
+interface Bloque {
+  id: number;
+  hora_inicio: string;
+  hora_fin: string;
+}
+
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (nuevaFecha: string, nuevaHora: string) => void;
+  onConfirm: (bloqueId: number, fecha: string, hora: string) => void;
   pacienteNombre: string;
 }
 
 export default function ModalRecorrer({ isOpen, onClose, onConfirm, pacienteNombre }: ModalProps) {
   const [fecha, setFecha] = useState("");
-  const [hora, setHora] = useState("");
+  const [bloques, setBloques] = useState<Bloque[]>([]);
+  const [bloqueSeleccionado, setBloqueSeleccionado] = useState<number | "">("");
+  const [loading, setLoading] = useState(false);
 
-  // Si no está abierto, no renderizamos nada (invisible)
+  useEffect(() => {
+    if (fecha) {
+      const fetchBloques = async () => {
+        try {
+          setLoading(true);
+          const response = await api.get(`/bloques/fecha/${fecha}`);
+          if (response.data.success) {
+            setBloques(response.data.data);
+          }
+        } catch (error) {
+          console.error("Error fetching blocks:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchBloques();
+    } else {
+      setBloques([]);
+    }
+    setBloqueSeleccionado("");
+  }, [fecha]);
+
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (fecha && hora) {
-      onConfirm(fecha, hora);
-      // Limpiamos los campos para la próxima vez
-      setFecha("");
-      setHora("");
+    if (fecha && bloqueSeleccionado) {
+      const bloque = bloques.find(b => b.id === Number(bloqueSeleccionado));
+      if (bloque) {
+        onConfirm(Number(bloqueSeleccionado), fecha, bloque.hora_inicio);
+        setFecha("");
+        setBloqueSeleccionado("");
+      }
     }
   };
 
@@ -42,24 +73,29 @@ export default function ModalRecorrer({ isOpen, onClose, onConfirm, pacienteNomb
               className={styles.input}
               value={fecha}
               onChange={(e) => setFecha(e.target.value)}
-              min={new Date().toISOString().split('T')[0]} // No permite fechas en el pasado
+              min={new Date().toISOString().split('T')[0]}
               required 
             />
           </div>
 
           <div className={styles.formGroup}>
-            <label>Nueva Hora</label>
+            <label>Nueva Hora (Bloques Disponibles)</label>
             <select 
               className={styles.input}
-              value={hora}
-              onChange={(e) => setHora(e.target.value)}
+              value={bloqueSeleccionado}
+              onChange={(e) => setBloqueSeleccionado(e.target.value === "" ? "" : Number(e.target.value))}
               required
+              disabled={loading || !fecha}
             >
-              <option value="">Selecciona una hora</option>
-              <option value="09:00 AM">09:00 AM</option>
-              <option value="10:00 AM">10:00 AM</option>
-              <option value="11:30 AM">11:30 AM</option>
-              <option value="03:00 PM">03:00 PM</option>
+              <option value="">{loading ? "Cargando..." : (fecha ? "Selecciona un bloque" : "Primero elige una fecha")}</option>
+              {bloques.map(b => (
+                <option key={b.id} value={b.id}>
+                  {b.hora_inicio.substring(0, 5)} - {b.hora_fin.substring(0, 5)}
+                </option>
+              ))}
+              {!loading && fecha && bloques.length === 0 && (
+                <option disabled>No hay bloques disponibles</option>
+              )}
             </select>
           </div>
 
@@ -67,7 +103,7 @@ export default function ModalRecorrer({ isOpen, onClose, onConfirm, pacienteNomb
             <button type="button" className={`${styles.btn} ${styles.btnCancel}`} onClick={onClose}>
               Cancelar
             </button>
-            <button type="submit" className={`${styles.btn} ${styles.btnConfirm}`}>
+            <button type="submit" className={`${styles.btn} ${styles.btnConfirm}`} disabled={!bloqueSeleccionado}>
               Confirmar Cambio
             </button>
           </div>
