@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import styles from './CitasTable.module.css';
 import ModalRecorrer from './ModalRecorrer';
 import { citaService } from '../../services/cita.service';
+import { toast } from 'react-hot-toast';
 
 interface Cita {
   id_cita: number;
@@ -48,15 +49,19 @@ export default function CitasTable({ tipo }: Props) {
   }, [tipo]);
 
   const cambiarEstado = async (id: number, aceptar: boolean) => {
+    // Confirmación simple antes de proceder
+    if (!window.confirm(`¿Estás seguro de que deseas ${aceptar ? 'confirmar' : 'rechazar'} esta cita?`)) {
+      return;
+    }
+
     try {
       const data = await citaService.responder(id, aceptar);
       if (data.success) {
-        // Recargar la lista después de responder
         fetchCitas();
-        alert(aceptar ? "Cita confirmada" : "Cita rechazada");
+        toast.success(aceptar ? "Cita confirmada correctamente" : "Cita rechazada");
       }
     } catch (err: any) {
-      alert("Error al procesar la cita");
+      toast.error("Error al procesar la cita");
       console.error(err);
     }
   };
@@ -73,12 +78,12 @@ export default function CitasTable({ tipo }: Props) {
         const data = await citaService.reprogramar(citaSeleccionada.id, bloqueId);
         
         if (data.success) {
-          alert(`Cita de ${citaSeleccionada.paciente} recorrida exitosamente al ${nuevaFecha} a las ${nuevaHora}`);
+          toast.success(`Cita de ${citaSeleccionada.paciente} recorrida al ${nuevaFecha} ${nuevaHora}`);
           setModalAbierto(false);
           fetchCitas();
         }
       } catch (err: any) {
-        alert(err.response?.data?.message || "Error al reprogramar la cita");
+        toast.error(err.response?.data?.message || "Error al reprogramar la cita");
       } finally {
         setLoading(false);
       }
@@ -96,7 +101,18 @@ export default function CitasTable({ tipo }: Props) {
     }
   };
 
-  if (loading) return <p>Cargando citas...</p>;
+  const SkeletonRows = () => (
+    <>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <tr key={i} className={styles.skeletonRow}>
+          {Array(6).fill(0).map((_, j) => (
+            <td key={j}><div className={styles.skeletonText}></div></td>
+          ))}
+        </tr>
+      ))}
+    </>
+  );
+
   if (error) return <p className={styles.error}>{error}</p>;
 
   return (
@@ -113,7 +129,9 @@ export default function CitasTable({ tipo }: Props) {
           </tr>
         </thead>
         <tbody>
-          {citas.length === 0 ? (
+          {loading ? (
+            <SkeletonRows />
+          ) : citas.length === 0 ? (
             <tr>
               <td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>
                 {tipo === 'pendientes' 
