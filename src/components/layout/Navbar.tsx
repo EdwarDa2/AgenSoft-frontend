@@ -16,7 +16,7 @@ export default function Navbar() {
       <ul className={styles.navLinks}>        
         {(!user || user.rol === 'paciente') && (
           <li>
-            <Link href="/paciente/agendar">Agendar Cita</Link>
+            <Link href="/paciente">Mis Citas</Link>
           </li>
         )}
 

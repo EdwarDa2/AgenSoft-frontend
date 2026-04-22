@@ -14,8 +14,8 @@ export default function Home() {
         </p>
 
         <div className={styles.actions}>
-          <Link href="/paciente/agendar" className={styles.primaryButton}>
-            Agendar una Cita
+          <Link href="/paciente" className={styles.primaryButton}>
+            Mis Citas
           </Link>
           <Link href="/admin" className={styles.secondaryButton}>
             Acceso Administrativo
