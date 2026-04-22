@@ -1,0 +1,44 @@
+.adminContainer {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.title {
+  color: #333;
+  margin: 0;
+  font-size: 2rem;
+}
+
+.stats {
+  display: flex;
+  gap: 1rem;
+}
+
+.statCard {
+  background: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #eaeaea;
+  text-align: center;
+}
+
+.statCard h4 {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.statCard p {
+  margin: 0.5rem 0 0 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1e88e5;
+}
