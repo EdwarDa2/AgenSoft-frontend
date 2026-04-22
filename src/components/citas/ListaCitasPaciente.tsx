@@ -20,26 +20,48 @@ export default function ListaCitasPaciente() {
   const [filtroEstado, setFiltroEstado] = useState("todos");
   const [busqueda, setBusqueda] = useState("");
 
-  useEffect(() => {
-    const fetchCitas = async () => {
-      if (!user?.id) return;
-      
-      try {
-        setLoading(true);
-        const response = await api.get(`/citas/paciente/${user.id}`);
-        if (response.data.success) {
-          setCitas(response.data.data);
-        }
-      } catch (err: any) {
-        setError("Error al cargar tus citas");
-        console.error(err);
-      } finally {
-        setLoading(false);
+  const fetchCitas = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setLoading(true);
+      const response = await api.get(`/citas/paciente/${user.id}`);
+      if (response.data.success) {
+        setCitas(response.data.data);
       }
-    };
+    } catch (err: any) {
+      setError("Error al cargar tus citas");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchCitas();
   }, [user?.id]);
+
+  const handleCancelar = async (id_cita: number) => {
+    if (!user?.id) return;
+    
+    if (!confirm("¿Estás seguro de que deseas cancelar esta cita?")) return;
+
+    try {
+      setLoading(true);
+      const response = await api.patch(`/citas/${id_cita}/cancelar`, {
+        paciente_id: user.id // Enviamos el usuario_id como paciente_id para validación en el back
+      });
+      
+      if (response.data.success) {
+        alert("Cita cancelada con éxito");
+        fetchCitas();
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Error al cancelar la cita");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const citasFiltradas = citas.filter(cita => {
     const coincideEstado = filtroEstado === "todos" || cita.estado.toLowerCase() === filtroEstado.toLowerCase();
@@ -100,6 +122,16 @@ export default function ListaCitasPaciente() {
                     {cita.estado}
                   </span>
                 </div>
+
+                {estadoLower !== 'cancelada' && estadoLower !== 'rechazada' && (
+                  <button 
+                    className={styles.cancelarBtn}
+                    onClick={() => handleCancelar(cita.id_cita)}
+                    disabled={loading}
+                  >
+                    {loading ? "..." : "Cancelar Cita"}
+                  </button>
+                )}
               </div>
             );
           })
