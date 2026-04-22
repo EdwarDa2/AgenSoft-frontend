@@ -27,7 +27,6 @@ const HORARIOS_INICIALES = [
 export default function ConfiguracionHorarios() {
   const [horarios, setHorarios] = useState(HORARIOS_INICIALES);
   const [loading, setLoading] = useState(false);
-  const [showGenerar, setShowGenerar] = useState(false);
   const [generarData, setGenerarData] = useState({
     inicio: new Date().toISOString().split('T')[0],
     fin: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -66,7 +65,6 @@ export default function ConfiguracionHorarios() {
         });
       }
       alert("¡Horarios base guardados exitosamente!");
-      setShowGenerar(true);
     } catch (error) {
       console.error(error);
       alert("Error al guardar la configuración");
@@ -142,32 +140,30 @@ export default function ConfiguracionHorarios() {
       </div>
 
       <button onClick={handleGuardar} className={styles.saveBtn} disabled={loading}>
-        {loading ? "Guardando..." : "Guardar Configuración"}
+        {loading ? "Guardando..." : "1. Guardar Horario Base"}
       </button>
 
-      {showGenerar && (
-        <div className={styles.generarSection} style={{ marginTop: '2rem', padding: '1.5rem', border: '2px solid #e3f2fd', borderRadius: '12px', background: '#f8fbff' }}>
-          <h3>Generar Bloques de Tiempo ⚡</h3>
-          <p>Crea automáticamente los espacios disponibles basados en tu configuración.</p>
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-            <div className={styles.timeInputGroup}>
-              <label>Desde</label>
-              <input type="date" value={generarData.inicio} onChange={e => setGenerarData({...generarData, inicio: e.target.value})} className={styles.input} />
-            </div>
-            <div className={styles.timeInputGroup}>
-              <label>Hasta</label>
-              <input type="date" value={generarData.fin} onChange={e => setGenerarData({...generarData, fin: e.target.value})} className={styles.input} />
-            </div>
-            <div className={styles.timeInputGroup}>
-              <label>Duración (min)</label>
-              <input type="number" value={generarData.duracion} onChange={e => setGenerarData({...generarData, duracion: Number(e.target.value)})} className={styles.input} />
-            </div>
+      <div className={styles.generarSection} style={{ marginTop: '2rem', padding: '1.5rem', border: '2px solid #e3f2fd', borderRadius: '12px', background: '#f8fbff' }}>
+        <h3>2. Generar Espacios en la Agenda ⚡</h3>
+        <p>Una vez guardado tu horario base, usa esta sección para crear los bloques disponibles en el calendario.</p>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+          <div className={styles.timeInputGroup}>
+            <label>Desde</label>
+            <input type="date" value={generarData.inicio} onChange={e => setGenerarData({...generarData, inicio: e.target.value})} className={styles.input} />
           </div>
-          <button onClick={handleGenerarBloques} className={styles.saveBtn} style={{ marginTop: '1rem', backgroundColor: '#1e88e5' }} disabled={loading}>
-            {loading ? "Generando..." : "Generar Espacios en la Agenda"}
-          </button>
+          <div className={styles.timeInputGroup}>
+            <label>Hasta</label>
+            <input type="date" value={generarData.fin} onChange={e => setGenerarData({...generarData, fin: e.target.value})} className={styles.input} />
+          </div>
+          <div className={styles.timeInputGroup}>
+            <label>Duración (min)</label>
+            <input type="number" value={generarData.duracion} onChange={e => setGenerarData({...generarData, duracion: Number(e.target.value)})} className={styles.input} />
+          </div>
         </div>
-      )}
+        <button onClick={handleGenerarBloques} className={styles.saveBtn} style={{ marginTop: '1rem', backgroundColor: '#1e88e5' }} disabled={loading}>
+          {loading ? "Generando..." : "Generar Bloques de Tiempo"}
+        </button>
+      </div>
     </div>
   );
 }
