@@ -1,10 +1,17 @@
 "use client";
 import Link from 'next/link';
-import { useAuth } from '../../context/AuthContext'; // <-- Importamos nuestro hook
+import { useAuth } from '../../context/AuthContext';
+import { useRouter } from 'next/navigation';
 import styles from './Navbar.module.css';
 
 export default function Navbar() {
   const { user, logout } = useAuth(); 
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
 
   return (
     <nav className={styles.navbar}>
@@ -14,7 +21,7 @@ export default function Navbar() {
         </Link>
       </div>
       <ul className={styles.navLinks}>        
-        {(!user || user.rol === 'paciente') && (
+        {user && user.rol === 'paciente' && (
           <li>
             <Link href="/paciente">Mis Citas</Link>
           </li>
@@ -42,7 +49,7 @@ export default function Navbar() {
           <li style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <span style={{ color: '#666' }}>Hola, <strong>{user.nombre}</strong></span>
             <button 
-              onClick={logout} 
+              onClick={handleLogout} 
               style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', fontWeight: 'bold' }}
             >
               Salir
