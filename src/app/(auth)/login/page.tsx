@@ -28,13 +28,14 @@ export default function LoginPage() {
         password
       });
 
-      const { user, token } = response.data;
+      // El backend devuelve { success, message, data: { user, token } }
+      const { user, token } = response.data.data;
       
       // Guardar en el contexto y localStorage
       login(user, token);
       
       // Redirigir según el rol
-      if (user.rol === 'admin') {
+      if (user.rol.toLowerCase() === 'admin') {
         router.push("/admin");
       } else {
         router.push("/paciente");
