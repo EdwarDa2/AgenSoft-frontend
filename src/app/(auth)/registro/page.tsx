@@ -2,25 +2,42 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import api from "@/api/axios";
 import styles from "./page.module.css";
 
 export default function RegistroPage() {
+  const router = useRouter();
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
   const [correo, setCorreo] = useState("");
   const [password, setPassword] = useState("");
+  const [rolId, setRolId] = useState(2); // 2 por defecto es Paciente
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleRegistro = (e: React.FormEvent) => {
+  const handleRegistro = async (e: React.FormEvent) => {
     e.preventDefault();
-    const nuevoPaciente = {
-      nombre,
-      telefono,
-      correo,
-      password
-    };
-    
-    console.log("Datos a enviar a la API:", nuevoPaciente);
-    alert(`¡Gracias por registrarte, ${nombre}!\n(Falta conectar con la API de Carlos)`);
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await api.post("/usuarios/registrar", {
+        nombre,
+        email: correo,
+        password,
+        rol_id: rolId
+      });
+
+      if (response.data.success) {
+        alert("¡Registro exitoso! Ahora puedes iniciar sesión.");
+        router.push("/login");
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Error al registrar usuario");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -29,7 +46,27 @@ export default function RegistroPage() {
         <h1 className={styles.title}>Crear Cuenta</h1>
         <p className={styles.subtitle}>Únete a AgenSoft para agendar tus citas</p>
 
+        {error && <p style={{ color: 'red', textAlign: 'center', marginBottom: '1rem' }}>{error}</p>}
+
         <form onSubmit={handleRegistro}>
+          <div className={styles.formGroup}>
+            <label>Tipo de Usuario</label>
+            <div className={styles.roleSelector}>
+              <div 
+                className={`${styles.roleOption} ${rolId === 2 ? styles.roleOptionActive : ''}`}
+                onClick={() => setRolId(2)}
+              >
+                Paciente
+              </div>
+              <div 
+                className={`${styles.roleOption} ${rolId === 1 ? styles.roleOptionActive : ''}`}
+                onClick={() => setRolId(1)}
+              >
+                Administrador
+              </div>
+            </div>
+          </div>
+
           <div className={styles.formGroup}>
             <label>Nombre Completo</label>
             <input 
@@ -81,8 +118,8 @@ export default function RegistroPage() {
             />
           </div>
 
-          <button type="submit" className={styles.submitBtn}>
-            Registrarme
+          <button type="submit" className={styles.submitBtn} disabled={isLoading}>
+            {isLoading ? "Registrando..." : "Registrarme"}
           </button>
         </form>
 
