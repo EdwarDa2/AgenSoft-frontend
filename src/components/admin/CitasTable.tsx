@@ -59,12 +59,24 @@ export default function CitasTable() {
     setModalAbierto(true);
   };
 
-  const confirmarRecorrido = (nuevaFecha: string, nuevaHora: string) => {
+  const confirmarRecorrido = async (bloqueId: number, nuevaFecha: string, nuevaHora: string) => {
     if (citaSeleccionada) {
-      // Por ahora simulado, ya que el backend no tiene 'recorrer' implementado completamente
-      alert(`Cita recorrida exitosamente al ${nuevaFecha} a las ${nuevaHora}`);
-      setModalAbierto(false);
-      fetchCitas();
+      try {
+        setLoading(true);
+        const response = await api.patch(`/citas/${citaSeleccionada.id}/reprogramar`, {
+          nuevo_bloque_id: bloqueId
+        });
+        
+        if (response.data.success) {
+          alert(`Cita de ${citaSeleccionada.paciente} recorrida exitosamente al ${nuevaFecha} a las ${nuevaHora}`);
+          setModalAbierto(false);
+          fetchCitas();
+        }
+      } catch (err: any) {
+        alert(err.response?.data?.message || "Error al reprogramar la cita");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 

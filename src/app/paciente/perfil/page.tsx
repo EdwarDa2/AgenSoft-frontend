@@ -1,23 +1,88 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./page.module.css";
 import { useAuth } from "../../../context/AuthContext";
+import api from "@/api/axios";
 
 export default function PerfilPacientePage() {
   const { user } = useAuth();
   
   const [formData, setFormData] = useState({
-    nombre: user?.nombre || "Cesar Yair",
-    email: user?.email || "cesar@ejemplo.com",
-    telefono: "961 123 4567",
-    informacionMedica: "Alérgico a la penicilina. Tipo de sangre O+."
+    nombre: "",
+    email: "",
+    telefono: "",
+    informacionMedica: ""
   });
+  const [loading, setLoading] = useState(true);
+  const [pacienteId, setPacienteId] = useState<number | null>(null);
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchPerfil = async () => {
+      if (!user?.id) return;
+      try {
+        setLoading(true);
+        // Intentar obtener el perfil por el ID de usuario
+        const response = await api.get(`/pacientes/usuario/${user.id}`);
+        if (response.data.success && response.data.data) {
+          const p = response.data.data;
+          setPacienteId(p.id);
+          setFormData({
+            nombre: p.nombre_completo || user.nombre || "",
+            email: user.email || "",
+            telefono: p.telefono || "",
+            informacionMedica: p.informacion_medica || ""
+          });
+        }
+      } catch (error) {
+        console.error("Error al cargar perfil:", error);
+        // Si no existe, al menos mostrar los datos del usuario
+        setFormData(prev => ({
+          ...prev,
+          nombre: user?.nombre || "",
+          email: user?.email || ""
+        }));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPerfil();
+  }, [user]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("¡Perfil actualizado con éxito! (Simulado)");
+    if (!user?.id) return;
+
+    try {
+      setLoading(true);
+      if (pacienteId) {
+        // Actualizar perfil existente
+        await api.patch(`/pacientes/${pacienteId}`, {
+          nombre_completo: formData.nombre,
+          telefono: formData.telefono,
+          informacion_medica: formData.informacionMedica
+        });
+      } else {
+        // Crear perfil si no existe (caso de usuario viejo sin perfil)
+        const res = await api.post("/pacientes", {
+          usuario_id: user.id,
+          nombre_completo: formData.nombre,
+          telefono: formData.telefono,
+          informacion_medica: formData.informacionMedica
+        });
+        if (res.data.success) {
+          setPacienteId(res.data.data.id);
+        }
+      }
+      alert("¡Perfil actualizado con éxito!");
+    } catch (error) {
+      console.error(error);
+      alert("Error al guardar los cambios");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,8 +133,8 @@ export default function PerfilPacientePage() {
           </div>
 
           <div className={styles.buttonGroup}>
-            <button type="submit" className={styles.saveBtn}>
-              Guardar Cambios
+            <button type="submit" className={styles.saveBtn} disabled={loading}>
+              {loading ? "Guardando..." : "Guardar Cambios"}
             </button>
             <Link href="/paciente" className={styles.cancelBtn}>
               Cancelar
