@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "../components/layout/Navbar";
+import { AuthProvider } from "../context/AuthContext"; 
 
 export const metadata: Metadata = {
   title: "AgenSoft | Citas Médicas",
@@ -15,10 +16,12 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body>
-        <Navbar />
-        <main style={{ padding: '2rem', minHeight: '80vh' }}>
-          {children}
-        </main>
+        <AuthProvider>
+          <Navbar />
+          <main style={{ padding: '2rem', minHeight: '80vh' }}>
+            {children}
+          </main>
+        </AuthProvider>
       </body>
     </html>
   );

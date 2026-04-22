@@ -3,16 +3,25 @@
 import { useState } from "react";
 import Link from "next/link";
 import styles from "./page.module.css";
+import { useAuth } from "../../../context/AuthContext"; // Importar el hook
+import { useRouter } from "next/navigation"; // Para redireccionar
 
-export default function LoginPage() {
-  const [correo, setCorreo] = useState("");
-  const [password, setPassword] = useState("");
+  export default function LoginPage() {
+    const [correo, setCorreo] = useState("");
+    const [password, setPassword] = useState("");
+    
+    const { login } = useAuth(); // Traer la función login
+    const router = useRouter();  // Traer el router
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    alert(`Intentando iniciar sesión con: ${correo}\n(Falta conectar con la API de Carlos)`);
-  };
-
+    const handleLogin = (e: React.FormEvent) => {
+      e.preventDefault();
+      
+      // Simulamos que el backend nos respondió "Todo OK, es el paciente Cesar"
+      login("Cesar", "paciente"); 
+      
+      // Lo mandamos al calendario directamente
+      router.push("/paciente/agendar"); 
+    };
   return (
     <div className={styles.authContainer}>
       <div className={styles.authCard}>
