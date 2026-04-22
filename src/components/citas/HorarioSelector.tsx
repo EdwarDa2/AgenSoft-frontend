@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { bloqueService } from '../../services/bloque.service';
 import { citaService } from '../../services/cita.service';
 import { Bloque } from '../../types';
+import { toast } from 'react-hot-toast';
 
 export default function HorarioSelector() {
   const router = useRouter();
@@ -50,11 +51,12 @@ export default function HorarioSelector() {
       });
 
       if (data.success) {
+        toast.success("Cita agendada correctamente");
         const bloque = bloques.find(b => b.id === bloqueSeleccionado);
         router.push(`/paciente/agendar/exito?fecha=${fecha}&hora=${bloque?.hora_inicio}`);
       }
     } catch (err: any) {
-      alert(err.response?.data?.message || "Error al agendar la cita");
+      toast.error(err.response?.data?.message || "Error al agendar la cita");
     } finally {
       setLoading(false);
     }

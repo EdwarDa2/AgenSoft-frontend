@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authService } from "../../../services/auth.service";
 import styles from "./page.module.css";
+import { toast } from 'react-hot-toast';
 
 export default function RegistroPage() {
   const router = useRouter();
@@ -30,11 +31,13 @@ export default function RegistroPage() {
       });
 
       if (data.success) {
-        alert("¡Registro exitoso! Ahora puedes iniciar sesión.");
+        toast.success("¡Registro exitoso! Ahora puedes iniciar sesión.");
         router.push("/login");
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || "Error al registrar usuario");
+      const msg = err.response?.data?.message || "Error al registrar usuario";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
