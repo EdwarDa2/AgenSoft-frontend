@@ -20,6 +20,12 @@ export default function Navbar() {
           </li>
         )}
 
+        {user?.rol === 'paciente' && (
+          <li>
+            <Link href="/paciente/perfil">Mi Perfil</Link>
+          </li>
+        )}
+
         {user?.rol === 'admin' && (
           <li>
             <Link href="/admin">Panel Admin</Link>
