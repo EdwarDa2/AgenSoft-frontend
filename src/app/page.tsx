@@ -1,7 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import styles from "./page.module.css";
+import { useAuth } from "../context/AuthContext";
 
 export default function Home() {
+  const { user } = useAuth();
+
   return (
     <div className={styles.container}>
       <main className={styles.hero}>
@@ -17,9 +22,12 @@ export default function Home() {
           <Link href="/paciente" className={styles.primaryButton}>
             Mis Citas
           </Link>
-          <Link href="/admin" className={styles.secondaryButton}>
-            Acceso Administrativo
-          </Link>
+          
+          {user?.rol === 'admin' && (
+            <Link href="/admin" className={styles.secondaryButton}>
+              Acceso Administrativo
+            </Link>
+          )}
         </div>
       </main>
 
