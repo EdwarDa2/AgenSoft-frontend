@@ -11,13 +11,12 @@ interface Bloque {
 }
 
 interface ModalProps {
-  isOpen: boolean;
   onClose: () => void;
   onConfirm: (bloqueId: number, fecha: string, hora: string) => void;
-  pacienteNombre: string;
+  paciente: string;
 }
 
-export default function ModalRecorrer({ isOpen, onClose, onConfirm, pacienteNombre }: ModalProps) {
+export default function ModalRecorrer({ onClose, onConfirm, paciente }: ModalProps) {
   const [fecha, setFecha] = useState("");
   const [bloques, setBloques] = useState<Bloque[]>([]);
   const [bloqueSeleccionado, setBloqueSeleccionado] = useState<number | "">("");
@@ -45,8 +44,6 @@ export default function ModalRecorrer({ isOpen, onClose, onConfirm, pacienteNomb
     setBloqueSeleccionado("");
   }, [fecha]);
 
-  if (!isOpen) return null;
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (fecha && bloqueSeleccionado) {
@@ -63,7 +60,7 @@ export default function ModalRecorrer({ isOpen, onClose, onConfirm, pacienteNomb
     <div className={styles.overlay}>
       <div className={styles.modal}>
         <h3 className={styles.title}>Recorrer Cita</h3>
-        <p className={styles.subtitle}>Selecciona el nuevo horario para <strong>{pacienteNombre}</strong>.</p>
+        <p className={styles.subtitle}>Selecciona el nuevo horario para <strong>{paciente}</strong>.</p>
 
         <form onSubmit={handleSubmit}>
           <div className={styles.formGroup}>
