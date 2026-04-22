@@ -1,6 +1,7 @@
 "use client"; 
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './HorarioSelector.module.css';
 
 const HORARIOS_DISPONIBLES = [
@@ -9,11 +10,13 @@ const HORARIOS_DISPONIBLES = [
 ];
 
 export default function HorarioSelector() {
+  const router = useRouter();
   const [fecha, setFecha] = useState('');
   const [horaSeleccionada, setHoraSeleccionada] = useState<string | null>(null);
 
   const handleConfirmar = () => {
-    alert(`¡Cita solicitada para el ${fecha} a las ${horaSeleccionada}!\n(Falta conectar con la API)`);
+    // Redirigir a la página de éxito con los datos en la URL
+    router.push(`/paciente/agendar/exito?fecha=${fecha}&hora=${horaSeleccionada}`);
   };
 
   return (
