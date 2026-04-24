@@ -30,6 +30,10 @@ Bienvenido al frontend de **AgenSoft**, el sistema inteligente para la gestión 
 - **Cliente API**: Axios
 - **Notificaciones**: React Hot Toast
 
+## 🌐 Despliegue
+
+- **Frontend (Render):** [https://agensoft-frontend.onrender.com]
+
 ## 📦 Instalación y Configuración
 
 Sigue estos pasos para configurar el proyecto localmente:
